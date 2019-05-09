@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dreamscollide/docker-react-redis -f ./client/Dockerfile-dev ./client
+
+script:
+  - docker run dreamscollide/docker-react-redis npm test -- --coverage
+
+after_success:
+  - docker build -t dreamscollide/multi-client ./client
+  - docker build -t dreamscollide/multi-nginx ./nginx
+  - docker build -t dreamscollide/multi-server ./api
+  - docker build -t dreamscollide/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  # take images and push to docker hub
+  - docker push dreamscollide/multi-client
+  - docker push dreamscollide/multi-nginx
+  - docker push dreamscollide/multi-server
+  - docker push dreamscollide/multi-worker
